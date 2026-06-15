@@ -1,10 +1,11 @@
 #include "raylib.h"
+#include <math.h>
 
 int main() {
     // 1. Initialize the Window
     const int screenWidth = 1280;
     const int screenHeight = 720;
-    InitWindow(screenWidth, screenHeight, "Procedural 3D World");
+    InitWindow(screenWidth, screenHeight, "Attain Moksha");
 
     // 2. Setup the First-Person Camera
     Camera3D camera = { 0 };
@@ -15,10 +16,15 @@ int main() {
     camera.projection = CAMERA_PERSPECTIVE;
 
     // Lock the cursor inside the window for proper FPS camera movement
-    DisableCursor(); 
-    
-    // Target 60 frames per second
+    DisableCursor();
     SetTargetFPS(60);
+
+    // Time and Sun
+    // Future idea: Daylight Savings.
+    float timeOfDay = 0.0f;
+    const float DAY_DURATION = 720.0f; // 12 Minutes
+    const float NIGHT_DURATION = 720.0f; // 12 Minutes
+    const float FULL_CYCLE = DAY_DURATION + NIGHT_DURATION;
 
     // 3. Main Game Loop
     while (!WindowShouldClose()) {
@@ -26,6 +32,30 @@ int main() {
         // --- UPDATE ---
         // Raylib handles the WASD and Mouse math automatically here!
         UpdateCamera(&camera, CAMERA_FIRST_PERSON);
+
+        timeOfDay += GetFrameTime();
+        if (timeOfDay > FULL_CYCLE) {
+            timeOfDay = 0.0f;
+        }
+
+        float angle = (timeOfDay / FULL_CYCLE) * 2.0f * PI;
+        float orbitRadius = 300.0f;
+
+        Vector3 sunPos = {
+            cosf(angle) * orbitRadius,
+            sinf(angle) * orbitRadius,
+            150.0f
+        };
+
+        Color currentSkyColor = BLACK;
+        if (sunPos.y > 0) {
+            float sunIntensity = sunPos.y / orbitRadius;
+
+            currentSkyColor.r = (unsigned char)(SKYBLUE.r * sunIntensity);
+            currentSkyColor.g = (unsigned char)(SKYBLUE.g * sunIntensity);
+            currentSkyColor.b = (unsigned char)(SKYBLUE.b * sunIntensity + 50 * (1.0f - sunIntensity));
+            currentSkyColor.a = 255;
+        }
 
         // --- DRAW ---
         BeginDrawing();
@@ -37,6 +67,10 @@ int main() {
             BeginMode3D(camera);
                 // A temporary grid so you can feel the movement
                 DrawGrid(100, 1.0f); 
+
+                if (sunPos.y > -20.0f) {
+                    DrawSphere(sunPos, 15.0f, YELLOW);
+                }
             EndMode3D();
 
             // Draw 2D UI Elements (Overlays on top of 3D)
@@ -45,6 +79,8 @@ int main() {
             int centerY = screenHeight / 2;
             DrawLine(centerX - 10, centerY, centerX + 10, centerY, DARKGRAY);
             DrawLine(centerX, centerY - 10, centerX, centerY + 10, DARKGRAY);
+
+            DrawText(TextFormat("Time: %.1f / %.1f sec", timeOfDay, FULL_CYCLE), 10, 10, 20, LIGHTGRAY);
 
         EndDrawing();
     }
