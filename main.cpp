@@ -16,7 +16,7 @@ int main() {
     camera.projection = CAMERA_PERSPECTIVE;
 
     // Lock the cursor inside the window for proper FPS camera movement
-    DisableCursor();
+    // DisableCursor();
     SetTargetFPS(60);
 
     // Time and Sun
@@ -65,6 +65,18 @@ int main() {
 
             // Draw 3D Elements
             BeginMode3D(camera);
+                float shading = (sunPos.y > 0) ? (sunPos.y / 300.0f): 0.0f;
+
+                Color cubeColor = {
+                    (unsigned char)(180 * shading),
+                    (unsigned char)(120 * shading),
+                    (unsigned char)(60 * shading),
+                    255
+                };
+                // Draw a solid cube at the center of the world (X:0, Y:1, Z:0) with size 2.0
+                DrawCube((Vector3){ 3.0f, 1.0f, 3.0f }, 2.0f, 2.0f, 2.0f, cubeColor);
+                DrawCubeWires((Vector3){ 3.0f, 1.0f, 3.0f }, 2.0f, 2.0f, 2.0f, DARKGRAY);
+
                 // A temporary grid so you can feel the movement
                 DrawGrid(100, 1.0f); 
 
